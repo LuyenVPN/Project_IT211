@@ -1,0 +1,460 @@
+{
+  "info": {
+    "name": "Project API Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection for hospital project endpoints. Responses follow {success,message,data} where implemented."
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login - Cap phat JWT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data.accessToken) pm.environment.set('accessToken', body.data.accessToken);",
+                  "if (body.data && body.data.refreshToken) pm.environment.set('refreshToken', body.data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{patientUsername}}\",\n  \"password\": \"{{patientPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login Doctor - Lay doctorAccessToken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data.accessToken) pm.environment.set('doctorAccessToken', body.data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{doctorUsername}}\",\n  \"password\": \"{{doctorPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login Admin - Lay adminAccessToken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data.accessToken) pm.environment.set('adminAccessToken', body.data.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{adminUsername}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token - Xoay vong token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data.accessToken) pm.environment.set('accessToken', body.data.accessToken);",
+                  "if (body.data && body.data.refreshToken) pm.environment.set('refreshToken', body.data.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout - Revoke Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accessToken\": \"{{accessToken}}\",\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Register - Dang ky benh nhan moi",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newpatient\",\n  \"password\": \"pass123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Change Password - Doi mat khau",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "change-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"{{patientPassword}}\",\n  \"newPassword\": \"newpass123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Forgot Password - Quen mat khau",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "forgot-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{patientUsername}}\",\n  \"newPassword\": \"{{patientPassword}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - User Management",
+      "item": [
+        {
+          "name": "List/Search Users - Phan trang",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const users = body.data && body.data.content ? body.data.content : [];",
+                  "const patient = users.find(u => u.username === 'patient1') || users.find(u => u.role === 'PATIENT');",
+                  "const doctor = users.find(u => u.username === 'doctor1') || users.find(u => u.role === 'DOCTOR');",
+                  "if (patient && patient.id) {",
+                  "  pm.environment.set('userId', patient.id);",
+                  "  pm.environment.set('ownerId', patient.id);",
+                  "}",
+                  "if (doctor && doctor.id) pm.environment.set('doctorId', doctor.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users?keyword=patient&page=0&size=10&sort=id,asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users"],
+              "query": [
+                { "key": "keyword", "value": "patient" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "sort", "value": "id,asc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User By Id",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"doctor2\",\n  \"password\": \"Doctor123\",\n  \"role\": \"DOCTOR\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users", "{{userId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"patient-updated\",\n  \"password\": \"\",\n  \"role\": \"PATIENT\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "users", "{{userId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patient - Appointments",
+      "item": [
+        {
+          "name": "Create Appointment - Dat lich kham",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.id) pm.environment.set('appointmentId', body.id);",
+                  "if (body.data && body.data.id) pm.environment.set('appointmentId', body.data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/patient/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "patient", "appointments"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-06-20\",\n  \"timeSlot\": \"09:00-09:30\",\n  \"symptomDescription\": \"Fever\",\n  \"reason\": \"Kham tong quat\"\n}"
+            }
+          }
+        },
+        {
+          "name": "My Appointments - Lich su kham ca nhan",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/patient/appointments/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "patient", "appointments", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doctor/Admin - Appointment Approval",
+      "item": [
+        {
+          "name": "Approve Appointment - Phe duyet",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{doctorAccessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/patient/appointments/{{appointmentId}}/status?status=APPROVED",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "patient", "appointments", "{{appointmentId}}", "status"],
+              "query": [
+                { "key": "status", "value": "APPROVED" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject Appointment - Tu choi",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{doctorAccessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/patient/appointments/{{appointmentId}}/status?status=REJECTED",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "patient", "appointments", "{{appointmentId}}", "status"],
+              "query": [
+                { "key": "status", "value": "REJECTED" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doctor - Medical Records",
+      "item": [
+        {
+          "name": "Upload Medical Record - Tai ho so benh an",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{doctorAccessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doctor/records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "doctor", "records"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "diagnosis", "type": "text", "value": "Diagnosis text" },
+                { "key": "ownerId", "type": "text", "value": "{{ownerId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Advanced - Audit Logs",
+      "item": [
+        {
+          "name": "List Audit Logs - Log thoi gian thuc hien",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminAccessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/audit-logs?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "admin", "audit-logs"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": []
+}
