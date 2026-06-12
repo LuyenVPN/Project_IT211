@@ -29,26 +29,69 @@ public class AppointmentService {
 
     @Transactional
     public AppointmentResponse createAppointment(AppointmentRequest req, String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
-        if (user.getRole() == null || !user.getRole().name().equals("PATIENT")) {
-            throw new AccessDeniedException("Only patients can create appointments");
+        User patient = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User không thấy"));
+
+        if (patient.getRole() == null || !patient.getRole().name().equals("PATIENT")) {
+            throw new AccessDeniedException("Chỉ bệnh nhân mới đặt được lịch hẹn");
         }
 
-        Appointment a = new Appointment();
-        a.setDate(req.date());
-        a.setTimeSlot(req.timeSlot());
-        a.setSymptomDescription(req.symptomDescription());
-        a.setReason(req.reason());
-        a.setStatus(StatusEnum.PENDING);
-        a.setPatient(user);
+        User doctor = userRepository.findById(req.doctorId())
+                .orElseThrow(() -> new RuntimeException("Doctor không thấy"));
 
-        Appointment saved = appointmentRepository.save(a);
-        Long doctorId = saved.getDoctor() != null ? saved.getDoctor().getId() : null;
-        return new AppointmentResponse(saved.getId(), saved.getDate(), saved.getTimeSlot(), saved.getStatus().name(), saved.getSymptomDescription(), saved.getReason(), saved.getPatient().getId(), doctorId);
+        if (doctor.getRole() == null || !doctor.getRole().name().equals("DOCTOR")) {
+            throw new RuntimeException("Người dùng không phải bác sĩ");
+        }
+        boolean exists = appointmentRepository.existsByDoctorIdAndDateAndTimeSlot(
+                doctor.getId(),
+                req.date(),
+                req.timeSlot()
+        );
+
+        if (exists) {
+            throw new RuntimeException(
+                    "Doctor đã có lịch hẹn vào lúc "
+                            + req.date()
+                            + " at "
+                            + req.timeSlot()
+            );
+        }
+
+        if (appointmentRepository.existsByPatientIdAndDateAndTimeSlot(
+                patient.getId(),
+                req.date(),
+                req.timeSlot())) {
+
+            throw new RuntimeException(
+                    "Bạn đã có lịch hẹn vào khung giờ này rồi"
+            );
+        }
+        Appointment appointment = new Appointment();
+        appointment.setDate(req.date());
+        appointment.setTimeSlot(req.timeSlot());
+        appointment.setSymptomDescription(req.symptomDescription());
+        appointment.setReason(req.reason());
+        appointment.setStatus(StatusEnum.PENDING);
+
+        appointment.setPatient(patient);
+        appointment.setDoctor(doctor);
+
+        Appointment saved = appointmentRepository.save(appointment);
+
+        return new AppointmentResponse(
+                saved.getId(),
+                saved.getDate(),
+                saved.getTimeSlot(),
+                saved.getStatus().name(),
+                saved.getSymptomDescription(),
+                saved.getReason(),
+                saved.getPatient().getId(),
+                saved.getDoctor().getId()
+        );
     }
 
     public List<AppointmentResponse> getAppointmentsForPatient(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User không thấy"));
         List<Appointment> list = appointmentRepository.findAllByPatientIdOrderByDateDesc(user.getId());
         return list.stream().map(a -> {
             Long doctorId = a.getDoctor() != null ? a.getDoctor().getId() : null;
@@ -59,18 +102,47 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponse updateStatus(Long appointmentId, String newStatusStr, String username) {
         // Only allow ADMIN or DOCTOR to update status - check caller role by loading user
-        User caller = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        User caller = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User không thấy"));
         String callerRole = caller.getRole() != null ? caller.getRole().name() : "";
         if (!callerRole.equals("ADMIN") && !callerRole.equals("DOCTOR")) {
-            throw new SecurityException("Only admin or doctor can change appointment status");
+            throw new SecurityException("Chỉ admin hoặc bác sĩ mới có thể thay đổi trạng thái cuộc hẹn");
         }
 
-        Appointment ap = appointmentRepository.findById(appointmentId).orElseThrow(() -> new RuntimeException("Appointment not found"));
+        Appointment ap = appointmentRepository.findById(appointmentId).orElseThrow(() -> new RuntimeException("Appointment không thấy"));
         StatusEnum newStatus = StatusEnum.valueOf(newStatusStr);
         ap.setStatus(newStatus);
         Appointment saved = appointmentRepository.save(ap);
         Long doctorId = saved.getDoctor() != null ? saved.getDoctor().getId() : null;
         return new AppointmentResponse(saved.getId(), saved.getDate(), saved.getTimeSlot(), saved.getStatus().name(), saved.getSymptomDescription(), saved.getReason(), saved.getPatient().getId(), doctorId);
+    }
+
+    public List<AppointmentResponse> getAppointmentsForDoctor(
+            String username) {
+
+        User doctor = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("Không tìm thấy bác sĩ"));
+
+        List<Appointment> appointments =
+                appointmentRepository
+                        .findAllByDoctorIdOrderByDateDesc(
+                                doctor.getId()
+                        );
+
+        return appointments.stream()
+                .map(a -> new AppointmentResponse(
+                        a.getId(),
+                        a.getDate(),
+                        a.getTimeSlot(),
+                        a.getStatus().name(),
+                        a.getSymptomDescription(),
+                        a.getReason(),
+                        a.getPatient().getId(),
+                        a.getDoctor() != null
+                                ? a.getDoctor().getId()
+                                : null
+                ))
+                .toList();
     }
 }
 

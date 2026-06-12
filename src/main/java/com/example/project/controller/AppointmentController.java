@@ -52,6 +52,26 @@ public class AppointmentController {
         String username = auth.getName();
         return ApiResponse.success("Updated successfully", appointmentService.updateStatus(id, status, username));
     }
+
+    @GetMapping("/doctor")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ApiResponse<List<AppointmentResponse>>
+    doctorAppointments() {
+
+        var auth =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        String username = auth.getName();
+
+        return ApiResponse.success(
+                "Lấy danh sách cuộc hẹn thành công",
+                appointmentService.getAppointmentsForDoctor(
+                        username
+                )
+        );
+    }
 }
 
 

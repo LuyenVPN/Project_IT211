@@ -47,19 +47,46 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/login", "/api/v1/auth/login",
-                                "/api/auth/register", "/api/v1/auth/register",
-                                "/api/auth/refresh", "/api/v1/auth/refresh",
-                                "/api/auth/logout", "/api/v1/auth/logout",
-                                "/api/auth/forgot-password", "/api/v1/auth/forgot-password",
-                                "/h2-console/**"
-                        ).permitAll()
-                        .requestMatchers("/api/auth/change-password", "/api/v1/auth/change-password").authenticated()
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/doctor/**").hasRole("DOCTOR")
-                        .requestMatchers("/api/v1/patient/**").hasRole("PATIENT")
-                        .anyRequest().permitAll()
+//                        .requestMatchers(
+//                                "/api/auth/login", "/api/v1/auth/login",
+//                                "/api/auth/register", "/api/v1/auth/register",
+//                                "/api/auth/refresh", "/api/v1/auth/refresh",
+//                                "/api/auth/logout", "/api/v1/auth/logout",
+//                                "/api/auth/forgot-password", "/api/v1/auth/forgot-password",
+//                                "/h2-console/**"
+//                        ).permitAll()
+//                        .requestMatchers("/api/auth/change-password", "/api/v1/auth/change-password").authenticated()
+//                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+//                        .requestMatchers("/api/v1/doctor/**").hasRole("DOCTOR")
+//                        .requestMatchers("/api/v1/patient/**").hasRole("PATIENT")
+//                        .anyRequest().permitAll()
+                                .requestMatchers(
+                                        "/api/auth/login", "/api/v1/auth/login",
+                                        "/api/auth/register", "/api/v1/auth/register",
+                                        "/api/auth/refresh", "/api/v1/auth/refresh",
+                                        "/api/auth/logout", "/api/v1/auth/logout",
+                                        "/api/auth/forgot-password", "/api/v1/auth/forgot-password",
+                                        "/h2-console/**"
+                                ).permitAll()
+
+                                .requestMatchers(
+                                        "/api/v1/patient/appointments/*/status"
+                                ).hasAnyRole("ADMIN", "DOCTOR")
+
+                                .requestMatchers("/api/auth/change-password",
+                                        "/api/v1/auth/change-password")
+                                .authenticated()
+
+                                .requestMatchers("/api/v1/admin/**")
+                                .hasRole("ADMIN")
+
+                                .requestMatchers("/api/v1/doctor/**")
+                                .hasRole("DOCTOR")
+
+                                .requestMatchers("/api/v1/patient/**")
+                                .hasRole("PATIENT")
+
+                                .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

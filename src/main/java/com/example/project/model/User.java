@@ -23,6 +23,7 @@ public class User {
     private String username;
 
     @Column(nullable = false, length = 200)
+    @NotBlank
     @JsonIgnore
     private String passwordHash;
 

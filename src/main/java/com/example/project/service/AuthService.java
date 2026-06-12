@@ -1,5 +1,6 @@
 package com.example.project.service;
 
+import com.example.project.exception.DuplicateUserException;
 import com.example.project.model.RefreshToken;
 import com.example.project.model.TokenBlacklist;
 import com.example.project.model.User;
@@ -49,10 +50,10 @@ public class AuthService {
     @Transactional
     public AuthResponse login(String username, String password) {
         Optional<User> opt = userRepo.findByUsername(username);
-        if (opt.isEmpty()) throw new RuntimeException("Invalid credentials");
+        if (opt.isEmpty()) throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không đúng");
 
         User user = opt.get();
-        if (!verifyPassword(user, password)) throw new RuntimeException("Invalid credentials");
+        if (!verifyPassword(user, password)) throw new RuntimeException("Tên đăng nhập hoặc mật khẩu không đúng");
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole().name());
@@ -72,8 +73,16 @@ public class AuthService {
 
     @Transactional
     public User registerPatient(String username, String rawPassword) {
+//        if (username == null || username.trim().isEmpty()) {
+//            throw new IllegalArgumentException("Tên đăng nhập không được để trống");
+//        }
+//
+//        if (rawPassword == null || rawPassword.trim().isEmpty()) {
+//            throw new IllegalArgumentException("Mật khẩu không được để trống");
+//        }
+
         if (userRepo.findByUsername(username).isPresent()) {
-            throw new RuntimeException("Username already exists");
+            throw new DuplicateUserException("Tên đăng nhập đã tồn tại");
         }
         User user = new User();
         user.setUsername(username);
@@ -86,13 +95,13 @@ public class AuthService {
     @Transactional
     public AuthResponse refresh(String oldRefreshToken) {
         RefreshToken stored = refreshTokenRepo.findByToken(oldRefreshToken)
-                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+                .orElseThrow(() -> new RuntimeException("Refresh token không hợp lệ"));
 
         if (stored.getRevokedAt() != null) {
-            throw new RuntimeException("Refresh token revoked");
+            throw new RuntimeException("Refresh token đã bị thu hồi");
         }
         if (stored.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Refresh token expired");
+            throw new RuntimeException("Refresh token đã hết hạn");
         }
 
         // Rotate: revoke old
@@ -121,7 +130,7 @@ public class AuthService {
                 .map(RefreshToken::getUser)
                 .orElseGet(() -> {
                     String username = jwtUtils.validateAndParse(accessToken).getBody().getSubject();
-                    return userRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+                    return userRepo.findByUsername(username).orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
                 });
 
         // blacklist the access token
