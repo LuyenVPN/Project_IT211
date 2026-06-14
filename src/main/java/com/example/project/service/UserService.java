@@ -8,8 +8,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class UserService {
@@ -37,7 +39,7 @@ public class UserService {
     @Transactional
     public UserResponse create(UserRequest request) {
         if (userRepository.findByUsername(request.username()).isPresent()) {
-            throw new IllegalArgumentException("Username already exists");
+            throw new IllegalArgumentException("Username đã tôn tại");
         }
 
         User user = new User();
@@ -48,28 +50,50 @@ public class UserService {
     @Transactional
     public UserResponse update(Long id, UserRequest request) {
         User user = findById(id);
+        if (!request.username().matches("^\\S+$")) {
+            throw new IllegalArgumentException(
+                    "Username không được để trống hoặc chứa khoảng trắng");
+        }
         if (!user.getUsername().equals(request.username())
                 && userRepository.findByUsername(request.username()).isPresent()) {
-            throw new IllegalArgumentException("Username already exists");
+            throw new IllegalArgumentException("Username đã tồn tại");
+        }
+//        "^\\S{6,}$"
+//        if (!request.username().matches("^[a-zA-Z0-9._-]{3,}$")) {
+//            throw new IllegalArgumentException("Username phải có ít nhất 3 ký tự và chỉ chứa chữ cái, số, dấu chấm, gạch dưới hoặc gạch ngang");
+//        }
+
+        if (request.password() != null) {
+            if (request.password().isBlank()) {
+                throw new IllegalArgumentException("Password không được để trống");
+            }
+
+            if (!request.password().matches("^\\S+$")) {
+                throw new IllegalArgumentException("Password không được chứa khoảng trắng");
+            }
         }
 
         applyEditableFields(user, request, false);
+
         return UserResponse.from(userRepository.save(user));
     }
 
     @Transactional
     public void delete(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new RuntimeException("User not found");
+        User user = findById(id);
+
+        if (user.getRole() == RoleEnum.ADMIN) {
+            throw new IllegalArgumentException("Không được phép xóa tài khoản ADMIN");
         }
-        userRepository.deleteById(id);
+
+        userRepository.delete(user);
     }
 
     @Transactional
     public void changePassword(String username, String oldPassword, String newPassword) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
         if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
-            throw new IllegalArgumentException("Old password is incorrect");
+            throw new IllegalArgumentException("Mật khẩu cũ không chính xác");
         }
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
@@ -83,18 +107,18 @@ public class UserService {
     }
 
     private User findById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User không thấy"));
     }
 
     private void applyEditableFields(User user, UserRequest request, boolean requirePassword) {
         if (request.username() == null || request.username().isBlank()) {
-            throw new IllegalArgumentException("Username is required");
+            throw new IllegalArgumentException("Username không được trống");
         }
         if (request.role() == null) {
-            throw new IllegalArgumentException("Role is required");
+            throw new IllegalArgumentException("Role không được trống");
         }
         if (requirePassword && (request.password() == null || request.password().isBlank())) {
-            throw new IllegalArgumentException("Password is required");
+            throw new IllegalArgumentException("Password không được trống");
         }
 
         user.setUsername(request.username().trim());

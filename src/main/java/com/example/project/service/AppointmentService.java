@@ -3,6 +3,7 @@ package com.example.project.service;
 import com.example.project.dto.AppointmentRequest;
 import com.example.project.dto.AppointmentResponse;
 import com.example.project.model.Appointment;
+import com.example.project.model.RoleEnum;
 import com.example.project.model.StatusEnum;
 import com.example.project.model.User;
 import com.example.project.repository.AppointmentRepository;
@@ -32,7 +33,7 @@ public class AppointmentService {
         User patient = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User không thấy"));
 
-        if (patient.getRole() == null || !patient.getRole().name().equals("PATIENT")) {
+        if (patient.getRole() != RoleEnum.PATIENT) {
             throw new AccessDeniedException("Chỉ bệnh nhân mới đặt được lịch hẹn");
         }
 

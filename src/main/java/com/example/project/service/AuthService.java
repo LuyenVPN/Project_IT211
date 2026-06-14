@@ -11,6 +11,7 @@ import com.example.project.security.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
@@ -26,20 +27,23 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepo;
     private final TokenBlacklistRepository tokenBlacklistRepo;
     private final JwtUtils jwtUtils;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final long refreshTokenValiditySeconds;
 
     @Autowired
-    public AuthService(UserRepository userRepo,
-                       RefreshTokenRepository refreshTokenRepo,
-                       TokenBlacklistRepository tokenBlacklistRepo,
-                       JwtUtils jwtUtils,
-                       @Value("${app.jwt.refresh-expiration-seconds:604800}") long refreshTokenValiditySeconds) {
+    public AuthService(
+            UserRepository userRepo,
+            RefreshTokenRepository refreshTokenRepo,
+            TokenBlacklistRepository tokenBlacklistRepo,
+            JwtUtils jwtUtils,
+            PasswordEncoder passwordEncoder,
+            @Value("${app.jwt.refresh-expiration-seconds:604800}") long refreshTokenValiditySeconds) {
+
         this.userRepo = userRepo;
         this.refreshTokenRepo = refreshTokenRepo;
         this.tokenBlacklistRepo = tokenBlacklistRepo;
         this.jwtUtils = jwtUtils;
-        this.passwordEncoder = new BCryptPasswordEncoder(12); // strength >= 10 per SRS
+        this.passwordEncoder = passwordEncoder;
         this.refreshTokenValiditySeconds = refreshTokenValiditySeconds;
     }
 
@@ -73,14 +77,6 @@ public class AuthService {
 
     @Transactional
     public User registerPatient(String username, String rawPassword) {
-//        if (username == null || username.trim().isEmpty()) {
-//            throw new IllegalArgumentException("Tên đăng nhập không được để trống");
-//        }
-//
-//        if (rawPassword == null || rawPassword.trim().isEmpty()) {
-//            throw new IllegalArgumentException("Mật khẩu không được để trống");
-//        }
-
         if (userRepo.findByUsername(username).isPresent()) {
             throw new DuplicateUserException("Tên đăng nhập đã tồn tại");
         }

@@ -1,6 +1,8 @@
 package com.example.project.aspect;
 
 import com.example.project.model.AuditLog;
+import com.example.project.model.User;
+import com.example.project.repository.UserRepository;
 import com.example.project.service.AuditService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +25,8 @@ public class AuditAspect {
 
     private final AuditService auditService;
     private static final int MAX_PAYLOAD_LOG_LENGTH = 2000;
-
+    @Autowired
+    private UserRepository userRepository;
     @Autowired
     public AuditAspect(AuditService auditService) {
         this.auditService = auditService;
@@ -41,9 +44,25 @@ public class AuditAspect {
 
         Long userId = null;
         String username = null;
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
+
+        if (auth != null
+                && auth.isAuthenticated()
+                && !"anonymousUser".equals(auth.getPrincipal())) {
+
             username = auth.getName();
+
+            try {
+                User user = userRepository
+                        .findByUsername(username)
+                        .orElse(null);
+
+                if (user != null) {
+                    userId = user.getId();
+                }
+            } catch (Exception ignored) {
+            }
         }
 
         String path = request != null ? request.getRequestURI() : "N/A";

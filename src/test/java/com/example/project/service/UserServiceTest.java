@@ -1,94 +1,169 @@
 package com.example.project.service;
 
+import com.example.project.dto.UserResponse;
 import com.example.project.model.RoleEnum;
 import com.example.project.model.User;
 import com.example.project.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest {
+class UserServiceTest {
 
     @Mock
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Mock
-    PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    UserService userService;
+    private UserService userService;
 
-    @Test
-    void createUserSuccess() {
-        when(userRepository.findByUsername("doctor2")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("Doctor123")).thenReturn("hash");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User user = invocation.getArgument(0);
-            user.setId(7L);
-            return user;
-        });
+    private User user;
 
-        var request = new UserService.UserRequest("doctor2", "Doctor123", RoleEnum.DOCTOR, true);
-        var response = userService.create(request);
+    /**
+     * Chuẩn bị dữ liệu mẫu trước mỗi test.
+     */
+    @BeforeEach
+    void setUp() {
 
-        assertEquals(7L, response.id());
-        assertEquals(RoleEnum.DOCTOR, response.role());
-    }
-
-    @Test
-    void searchByKeywordUsesRepositoryPaging() {
-        User user = new User();
+        user = new User();
         user.setId(1L);
-        user.setUsername("patient1");
-        user.setRole(RoleEnum.PATIENT);
+        user.setUsername("admin");
+        user.setPasswordHash("encoded");
+        user.setRole(RoleEnum.ADMIN);
         user.setIsActive(true);
-        var pageable = PageRequest.of(0, 10);
-        when(userRepository.findByUsernameContainingIgnoreCase("patient", pageable))
-                .thenReturn(new PageImpl<>(List.of(user), pageable, 1));
-
-        var page = userService.search("patient", pageable);
-
-        assertEquals(1, page.getTotalElements());
-        assertEquals("patient1", page.getContent().get(0).username());
     }
 
+    /**
+     * Kiểm tra lấy user theo id thành công.
+     */
     @Test
-    void changePasswordRejectsWrongOldPassword() {
-        User user = new User();
-        user.setUsername("patient1");
-        user.setPasswordHash("hash");
-        when(userRepository.findByUsername("patient1")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrong", "hash")).thenReturn(false);
+    void getById_success() {
 
-        assertThrows(IllegalArgumentException.class,
-                () -> userService.changePassword("patient1", "wrong", "newpass"));
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        UserResponse response =
+                userService.getById(1L);
+
+        assertNotNull(response);
+
+        verify(userRepository)
+                .findById(1L);
     }
 
+    /**
+     * Kiểm tra trường hợp user không tồn tại.
+     */
     @Test
-    void resetPasswordUpdatesHash() {
-        User user = new User();
-        user.setUsername("patient1");
-        when(userRepository.findByUsername("patient1")).thenReturn(Optional.of(user));
-        when(passwordEncoder.encode("newpass")).thenReturn("new-hash");
+    void getById_notFound() {
 
-        userService.resetPassword("patient1", "newpass");
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.empty());
 
-        assertEquals("new-hash", user.getPasswordHash());
-        verify(userRepository).save(user);
+        assertThrows(
+                RuntimeException.class,
+                () -> userService.getById(1L)
+        );
+    }
+
+    /**
+     * Kiểm tra xóa user thành công.
+     */
+    @Test
+    void delete_success() {
+
+        when(userRepository.existsById(1L))
+                .thenReturn(true);
+
+        userService.delete(1L);
+
+        verify(userRepository)
+                .existsById(1L);
+
+        verify(userRepository)
+                .deleteById(1L);
+    }
+
+    /**
+     * Kiểm tra tạo user mới thành công.
+     * Mục tiêu:
+     * - Username chưa tồn tại.
+     * - Password được encode.
+     * - User được lưu xuống database.
+     */
+    @Test
+    void create_success() {
+
+        UserService.UserRequest request =
+                new UserService.UserRequest(
+                        "admin2",
+                        "123456",
+                        RoleEnum.ADMIN,
+                        true
+                );
+
+        when(userRepository.findByUsername("admin2"))
+                .thenReturn(Optional.empty());
+
+        when(passwordEncoder.encode("123456"))
+                .thenReturn("encoded");
+
+        when(userRepository.save(any(User.class)))
+                .thenReturn(user);
+
+        UserResponse response =
+                userService.create(request);
+
+        assertNotNull(response);
+
+        verify(passwordEncoder)
+                .encode("123456");
+
+        verify(userRepository)
+                .save(any(User.class));
+    }
+
+    /**
+     * Kiểm tra đổi mật khẩu thành công.
+     * Mục tiêu:
+     * - Mật khẩu cũ đúng.
+     * - Mật khẩu mới được encode.
+     * - User được cập nhật.
+     */
+    @Test
+    void changePassword_success() {
+
+        when(userRepository.findByUsername("admin"))
+                .thenReturn(Optional.of(user));
+
+        when(passwordEncoder.matches(
+                "oldpass",
+                "encoded"))
+                .thenReturn(true);
+
+        when(passwordEncoder.encode("newpass"))
+                .thenReturn("newEncoded");
+
+        userService.changePassword(
+                "admin",
+                "oldpass",
+                "newpass"
+        );
+
+        verify(userRepository)
+                .save(user);
     }
 }

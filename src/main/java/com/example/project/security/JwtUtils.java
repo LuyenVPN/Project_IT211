@@ -29,13 +29,13 @@ public class JwtUtils {
         this.refreshTokenValiditySeconds = refreshTokenSeconds;
     }
 
-    public long getAccessTokenValiditySeconds() {
-        return accessTokenValiditySeconds;
-    }
-
-    public long getRefreshTokenValiditySeconds() {
-        return refreshTokenValiditySeconds;
-    }
+//    public long getAccessTokenValiditySeconds() {
+//        return accessTokenValiditySeconds;
+//    }
+//
+//    public long getRefreshTokenValiditySeconds() {
+//        return refreshTokenValiditySeconds;
+//    }
 
     public String generateAccessToken(String username, Map<String, Object> claims) {
         Instant now = Instant.now();

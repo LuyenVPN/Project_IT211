@@ -39,29 +39,29 @@ public class UserController {
                                                   @RequestParam(value = "size", defaultValue = "10") int size,
                                                   @RequestParam(value = "sort", defaultValue = "id,asc") String sort) {
         Pageable pageable = PageRequest.of(page, size, parseSort(sort));
-        return ApiResponse.success("Retrieved successfully", userService.search(keyword, pageable));
+        return ApiResponse.success("Thành công", userService.search(keyword, pageable));
     }
 
     @GetMapping("/{id}")
     public ApiResponse<UserResponse> getById(@PathVariable Long id) {
-        return ApiResponse.success("Retrieved successfully", userService.getById(id));
+        return ApiResponse.success("Thành Công", userService.getById(id));
     }
 
     @PostMapping
     public ResponseEntity<ApiResponse<UserResponse>> create(@Valid @RequestBody UserService.UserRequest request) {
-        return ResponseEntity.status(201).body(ApiResponse.success("Created successfully", userService.create(request)));
+        return ResponseEntity.status(201).body(ApiResponse.success("Thành công", userService.create(request)));
     }
 
     @PutMapping("/{id}")
     public ApiResponse<UserResponse> update(@PathVariable Long id,
                                             @Valid @RequestBody UserService.UserRequest request) {
-        return ApiResponse.success("Updated successfully", userService.update(id, request));
+        return ApiResponse.success("Updated thành công", userService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         userService.delete(id);
-        return ApiResponse.success("Deleted successfully");
+        return ApiResponse.success("Deleted thành công");
     }
 
     private Sort parseSort(String sort) {
